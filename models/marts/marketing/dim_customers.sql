@@ -58,7 +58,7 @@ final as (
     left join
         customer_orders
         on customers.customer_id = customer_orders.customer_id
-left join customer_ltv using (customer_id)
+    left join customer_ltv on customers.customer_id = customer_ltv.customer_id
 
 )
 
