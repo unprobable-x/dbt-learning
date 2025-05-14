@@ -45,3 +45,6 @@ models:
       +materialized: view
     marts:
       +materialized: table
+
+dbt-cloud:
+    project-id: 70403103977092
