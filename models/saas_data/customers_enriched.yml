@@ -1,0 +1,190 @@
+version: 2
+
+models:
+  - name: customers_enriched
+    description: "Enriched customer data combining base customer information with their latest metrics and derived time-based fields"
+    columns:
+      - name: customer_id
+        description: "Unique identifier for the customer"
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+        data_type: string
+
+      - name: acquisition_date
+        description: "Date when the customer was first acquired"
+        tests:
+          - not_null
+        data_type: date
+
+      - name: region
+        description: "Geographic region of the customer"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['east', 'west', 'north', 'south']
+        data_type: string
+
+      - name: industry
+        description: "Industry sector of the customer"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['technology', 'banking', 'retail']
+        data_type: string
+
+      - name: last_metrics_date
+        description: "Date of the most recent metrics"
+        data_type: date
+
+      - name: num_products
+        description: "Current number of active products"
+        data_type: integer
+
+      - name: total_arr
+        description: "Current Annual Recurring Revenue"
+        data_type: numeric
+
+      - name: total_mrr
+        description: "Current Monthly Recurring Revenue"
+        data_type: numeric
+
+      - name: pct_change_products_90d
+        description: "Percentage change in products over last 90 days"
+        data_type: numeric
+
+      - name: pct_change_arr_90d
+        description: "Percentage change in ARR over last 90 days"
+        data_type: numeric
+
+      - name: pct_change_mrr_90d
+        description: "Percentage change in MRR over last 90 days"
+        data_type: numeric
+
+      - name: num_logins
+        description: "Number of logins on the last metrics date"
+        data_type: integer
+
+      - name: num_unique_users
+        description: "Number of unique users on the last metrics date"
+        data_type: integer
+
+      - name: admin_logins
+        description: "Number of admin logins on the last metrics date"
+        data_type: integer
+
+      - name: admin_unique_users
+        description: "Number of unique admin users on the last metrics date"
+        data_type: integer
+
+      - name: advanced_logins
+        description: "Number of advanced user logins on the last metrics date"
+        data_type: integer
+
+      - name: advanced_unique_users
+        description: "Number of unique advanced users on the last metrics date"
+        data_type: integer
+
+      - name: standard_logins
+        description: "Number of standard user logins on the last metrics date"
+        data_type: integer
+
+      - name: standard_unique_users
+        description: "Number of unique standard users on the last metrics date"
+        data_type: integer
+
+      - name: num_logins_last_3m
+        description: "Total logins in the last 3 months"
+        data_type: integer
+
+      - name: num_unique_users_last_3m
+        description: "Unique users in the last 3 months"
+        data_type: integer
+
+      - name: num_logins_prev_3m
+        description: "Total logins in the previous 3 months"
+        data_type: integer
+
+      - name: num_unique_users_prev_3m
+        description: "Unique users in the previous 3 months"
+        data_type: integer
+
+      - name: pct_change_logins_3m
+        description: "Percentage change in logins over last 3 months"
+        data_type: numeric
+
+      - name: pct_change_unique_users_3m
+        description: "Percentage change in unique users over last 3 months"
+        data_type: numeric
+
+      - name: total_tickets_to_date
+        description: "Total number of support tickets ever created"
+        data_type: integer
+
+      - name: open_tickets
+        description: "Current number of open tickets"
+        data_type: integer
+
+      - name: open_bug_tickets
+        description: "Current number of open bug tickets"
+        data_type: integer
+
+      - name: open_incident_tickets
+        description: "Current number of open incident tickets"
+        data_type: integer
+
+      - name: open_question_tickets
+        description: "Current number of open question tickets"
+        data_type: integer
+
+      - name: open_feature_request_tickets
+        description: "Current number of open feature request tickets"
+        data_type: integer
+
+      - name: tickets_open_14plus_days
+        description: "Number of tickets open for 14 or more days"
+        data_type: integer
+
+      - name: avg_days_to_resolution
+        description: "Average days to resolve closed tickets"
+        data_type: numeric
+
+      - name: is_logins_declining
+        description: "Boolean indicating if login count is declining"
+        data_type: boolean
+
+      - name: is_unique_users_declining
+        description: "Boolean indicating if unique user count is declining"
+        data_type: boolean
+
+      - name: has_high_aging_tickets
+        description: "Boolean indicating if there are more than 3 tickets open for 14+ days"
+        data_type: boolean
+
+      - name: customer_risk_score_raw
+        description: "Raw risk score before normalization"
+        data_type: numeric
+
+      - name: customer_risk_score
+        description: "Normalized risk score (0-100 scale)"
+        data_type: numeric
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 and <= 100"
+
+      - name: days_since_acquisition
+        description: "Number of days since the customer was acquired"
+        data_type: integer
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: days_since_last_activity
+        description: "Number of days since the last metrics were recorded"
+        data_type: integer
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0" 
