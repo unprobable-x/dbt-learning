@@ -20,8 +20,8 @@ graph TD
     customer_daily_metrics --> customers_enriched
 
     %% Styling
-    classDef base fill:#f9f,stroke:#333,stroke-width:2px
-    classDef derived fill:#bbf,stroke:#333,stroke-width:2px
+    classDef base fill:#e6e6fa,stroke:#333,stroke-width:2px,color:#333
+    classDef derived fill:#d8e4f5,stroke:#333,stroke-width:2px,color:#333
 
     class customers,subscriptions,login_events,support_tickets base
     class customer_daily_metrics,customers_enriched derived
@@ -31,13 +31,13 @@ graph TD
 
 This diagram shows the dependencies between models in the saas_data directory:
 
-## Base Models (Pink)
+## Base Models (Lavender)
 - **customers**: Base customer information
 - **subscriptions**: Customer subscription data
 - **login_events**: User login activity
 - **support_tickets**: Customer support tickets
 
-## Derived Models (Blue)
+## Derived Models (Light Blue)
 - **customer_daily_metrics**: Daily metrics derived from all base models
 - **customers_enriched**: Latest metrics derived from customers and customer_daily_metrics
 
