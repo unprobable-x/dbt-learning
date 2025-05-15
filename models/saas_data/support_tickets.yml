@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: support_tickets
+    description: "Customer support tickets including status, category, and resolution timing"
+    columns:
+      - name: ticket_id
+        description: "Unique identifier for the ticket in format 'ticket000001'"
+        tests:
+          - unique
+          - not_null
+        data_type: string
+
+      - name: customer_id
+        description: "Foreign key to customers table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+        data_type: string
+
+      - name: status
+        description: "Current status of the ticket (open, on-hold, closed)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['open', 'on-hold', 'closed']
+        data_type: string
+
+      - name: created_date
+        description: "Timestamp when the ticket was created"
+        tests:
+          - not_null
+        data_type: timestamp
+
+      - name: ticket_category
+        description: "Category of the ticket (bug, incident, question, feature request)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['bug', 'incident', 'question', 'feature request']
+        data_type: string
+
+      - name: closed_date
+        description: "Timestamp when the ticket was closed (null if not closed)"
+        data_type: timestamp
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "closed_date is null or closed_date > created_date" 

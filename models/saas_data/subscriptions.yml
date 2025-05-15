@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: subscriptions
+    description: "Customer subscription data including product assignments, quantities, and revenue"
+    columns:
+      - name: customer_id
+        description: "Foreign key to customers table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+        data_type: string
+
+      - name: product_id
+        description: "Unique identifier for the product in format 'prod0001'"
+        tests:
+          - not_null
+        data_type: string
+
+      - name: quantity
+        description: "Number of units subscribed"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+        data_type: integer
+
+      - name: start_date
+        description: "Date when the subscription began"
+        tests:
+          - not_null
+        data_type: date
+
+      - name: end_date
+        description: "Date when the subscription ended (null if still active)"
+        data_type: date
+
+      - name: arr
+        description: "Annual Recurring Revenue for this subscription"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "in (999, 1999, 4999)"
+        data_type: integer 
