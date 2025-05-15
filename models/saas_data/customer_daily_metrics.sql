@@ -34,13 +34,13 @@ with customers as (
 , customer_dates as (
   select distinct
     customers.customer_id
-    , date_spine.date
+    , date_spine.date_day as date
   
   from customers
   
   cross join date_spine
 
-  where date_spine.date >= customers.acquisition_date
+  where date_spine.date_day >= customers.acquisition_date
 )
 
 , daily_subscription_metrics as (
@@ -80,7 +80,7 @@ with customers as (
   select
     customer_dates.customer_id
     , customer_dates.date
-    , count(login_events.*) as num_logins
+    , count(login_events.user_id) as num_logins
     , count(distinct login_events.user_id) as num_unique_users
     {% set user_types = ['admin', 'advanced', 'standard'] %}
     {% for user_type in user_types %}
@@ -92,10 +92,10 @@ with customers as (
     {% for metric in metrics_3m %}
     , sum(case 
         when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 90 day) and customer_dates.date
-        then {% if metric == 'num_logins' %}1{% else %}login_events.user_id{% endif %} else null end) as {{ metric }}_last_3m
+        then {% if metric == 'num_logins' %}1{% else %}1{% endif %} else null end) as {{ metric }}_last_3m
     , sum(case 
         when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 180 day) and date_sub(customer_dates.date, interval 91 day)
-        then {% if metric == 'num_logins' %}1{% else %}login_events.user_id{% endif %} else null end) as {{ metric }}_prev_3m
+        then {% if metric == 'num_logins' %}1{% else %}1{% endif %} else null end) as {{ metric }}_prev_3m
     {% endfor %}
 
   from customer_dates
@@ -167,14 +167,14 @@ with customers as (
     , coalesce(daily_subscription_metrics.total_arr, 0) as total_arr
     , coalesce(daily_subscription_metrics.total_mrr, 0) as total_mrr
     -- Subscription percentage changes
-    {% for metric in ['products', 'arr', 'mrr'] %}
+    {% for metric in ['num_products', 'total_arr', 'total_mrr'] %}
     , case 
         when coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0) = 0 then null
         else round(
             (coalesce(daily_subscription_metrics.{{ metric }}, 0) - coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0)) * 100.0 
             / coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0)
           , 2)
-      end as pct_change_{{ metric }}_90d
+      end as pct_change_{{ metric | replace('num_', '') | replace('total_', '') }}_90d
     {% endfor %}
 
     -- Login metrics
@@ -224,7 +224,33 @@ with customers as (
 
 , indicators as (
   select
-    *
+    customer_id
+    , date
+    , num_products
+    , total_arr
+    , total_mrr
+    , pct_change_products_90d
+    , pct_change_arr_90d
+    , pct_change_mrr_90d
+    , num_logins
+    , num_unique_users
+    {% for user_type in user_types %}
+    , {{ user_type }}_logins
+    , {{ user_type }}_unique_users
+    {% endfor %}
+    , num_logins_last_3m
+    , num_unique_users_last_3m
+    , num_logins_prev_3m
+    , num_unique_users_prev_3m
+    , pct_change_logins_3m
+    , pct_change_unique_users_3m
+    , total_tickets_to_date
+    , open_tickets
+    {% for category in ticket_categories %}
+    , open_{{ category | replace(' ', '_') }}_tickets
+    {% endfor %}
+    , tickets_open_14plus_days
+    , avg_days_to_resolution
     , case when pct_change_logins_3m < 0 then true else false end as is_logins_declining
     , case when pct_change_unique_users_3m < 0 then true else false end as is_unique_users_declining
     , case when tickets_open_14plus_days > 3 then true else false end as has_high_aging_tickets
@@ -246,7 +272,37 @@ with customers as (
 
 , final as (
   select 
-    *
+    customer_id
+    , date
+    , num_products
+    , total_arr
+    , total_mrr
+    , pct_change_products_90d
+    , pct_change_arr_90d
+    , pct_change_mrr_90d
+    , num_logins
+    , num_unique_users
+    {% for user_type in user_types %}
+    , {{ user_type }}_logins
+    , {{ user_type }}_unique_users
+    {% endfor %}
+    , num_logins_last_3m
+    , num_unique_users_last_3m
+    , num_logins_prev_3m
+    , num_unique_users_prev_3m
+    , pct_change_logins_3m
+    , pct_change_unique_users_3m
+    , total_tickets_to_date
+    , open_tickets
+    {% for category in ticket_categories %}
+    , open_{{ category | replace(' ', '_') }}_tickets
+    {% endfor %}
+    , tickets_open_14plus_days
+    , avg_days_to_resolution
+    , is_logins_declining
+    , is_unique_users_declining
+    , has_high_aging_tickets
+    , customer_risk_score_raw
     -- Normalize risk score across customers for each date (0-100 scale)
     , round(
         case 
