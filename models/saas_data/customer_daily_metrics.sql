@@ -3,6 +3,9 @@
   ) 
 }}
 
+{% set date_spine_start = '2023-01-01' %}
+{% set date_spine_end = '2024-12-31' %}
+
 with customers as (
   select * from {{ ref('customers') }}
 )
@@ -20,8 +23,12 @@ with customers as (
 )
 
 , date_spine as (
-  select date
-  from unnest(generate_date_array(date '2023-01-01', date '2024-12-31')) as date
+  {{ dbt_utils.date_spine(
+      datepart="day",
+      start_date="'" ~ date_spine_start ~ "'",
+      end_date="'" ~ date_spine_end ~ "'"
+    )
+  }}
 )
 
 , customer_dates as (
@@ -45,18 +52,19 @@ with customers as (
     , sum(subscriptions.arr) as total_arr
     , sum(subscriptions.arr)/12 as total_mrr
     -- 90-day comparison metrics
-    , lag(count(distinct subscriptions.product_id),90) over (
+    {% set metrics_90d = ['num_products', 'total_arr', 'total_mrr'] %}
+    {% for metric in metrics_90d %}
+    , lag(
+        {% if metric == 'num_products' %}
+          count(distinct subscriptions.product_id)
+        {% else %}
+          sum(subscriptions.arr) {% if metric == 'total_mrr' %}/ 12{% endif %}
+        {% endif %}
+      , 90) over (
         partition by customer_dates.customer_id 
         order by customer_dates.date
-      ) as num_products_90d_ago
-    , lag(sum(subscriptions.arr),90) over (
-        partition by customer_dates.customer_id 
-        order by customer_dates.date
-      ) as total_arr_90d_ago
-    , lag(sum(subscriptions.arr)/12, 90) over (
-        partition by customer_dates.customer_id 
-        order by customer_dates.date
-      ) as total_mrr_90d_ago
+      ) as {{ metric }}_90d_ago
+    {% endfor %}
 
   from customer_dates
 
@@ -74,26 +82,21 @@ with customers as (
     , customer_dates.date
     , count(login_events.*) as num_logins
     , count(distinct login_events.user_id) as num_unique_users
-    , sum(case when login_events.user_type = 'admin' then 1 else 0 end) as admin_logins
-    , sum(case when login_events.user_type = 'advanced' then 1 else 0 end) as advanced_logins
-    , sum(case when login_events.user_type = 'standard' then 1 else 0 end) as standard_logins
-    , count(distinct case when login_events.user_type = 'admin' then login_events.user_id else null end) as admin_unique_users
-    , count(distinct case when login_events.user_type = 'advanced' then login_events.user_id else null end) as advanced_unique_users
-    , count(distinct case when login_events.user_type = 'standard' then login_events.user_id else null end) as standard_unique_users
+    {% set user_types = ['admin', 'advanced', 'standard'] %}
+    {% for user_type in user_types %}
+    , sum(case when login_events.user_type = '{{ user_type }}' then 1 else 0 end) as {{ user_type }}_logins
+    , count(distinct case when login_events.user_type = '{{ user_type }}' then login_events.user_id else null end) as {{ user_type }}_unique_users
+    {% endfor %}
     -- Last 3 months metrics
+    {% set metrics_3m = ['num_logins', 'num_unique_users'] %}
+    {% for metric in metrics_3m %}
     , sum(case 
         when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 90 day) and customer_dates.date
-        then 1 else 0 end) as num_logins_last_3m
-    , count(distinct case 
-        when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 90 day) and customer_dates.date
-        then login_events.user_id else null end) as num_unique_users_last_3m
-    -- Previous 3 months metrics
+        then {% if metric == 'num_logins' %}1{% else %}login_events.user_id{% endif %} else null end) as {{ metric }}_last_3m
     , sum(case 
         when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 180 day) and date_sub(customer_dates.date, interval 91 day)
-        then 1 else 0 end) as num_logins_prev_3m
-    , count(distinct case 
-        when date(login_events.login_timestamp) between date_sub(customer_dates.date, interval 180 day) and date_sub(customer_dates.date, interval 91 day)
-        then login_events.user_id else null end) as num_unique_users_prev_3m
+        then {% if metric == 'num_logins' %}1{% else %}login_events.user_id{% endif %} else null end) as {{ metric }}_prev_3m
+    {% endfor %}
 
   from customer_dates
 
@@ -120,31 +123,15 @@ with customers as (
           and (support_tickets.status != 'closed' or support_tickets.closed_date is null or date(support_tickets.closed_date) > customer_dates.date)
         then 1 else 0 
       end) as open_tickets
-    -- Open tickets by category
+    {% set ticket_categories = ['bug', 'incident', 'question', 'feature request'] %}
+    {% for category in ticket_categories %}
     , sum(case 
         when date(support_tickets.created_date) <= customer_dates.date 
           and (support_tickets.status != 'closed' or support_tickets.closed_date is null or date(support_tickets.closed_date) > customer_dates.date)
-          and support_tickets.ticket_category = 'bug'
+          and support_tickets.ticket_category = '{{ category }}'
         then 1 else 0 
-      end) as open_bug_tickets
-    , sum(case 
-        when date(support_tickets.created_date) <= customer_dates.date 
-          and (support_tickets.status != 'closed' or support_tickets.closed_date is null or date(support_tickets.closed_date) > customer_dates.date)
-          and support_tickets.ticket_category = 'incident'
-        then 1 else 0 
-      end) as open_incident_tickets
-    , sum(case 
-        when date(support_tickets.created_date) <= customer_dates.date 
-          and (support_tickets.status != 'closed' or support_tickets.closed_date is null or date(support_tickets.closed_date) > customer_dates.date)
-          and support_tickets.ticket_category = 'question'
-        then 1 else 0 
-      end) as open_question_tickets
-    , sum(case 
-        when date(support_tickets.created_date) <= customer_dates.date 
-          and (support_tickets.status != 'closed' or support_tickets.closed_date is null or date(support_tickets.closed_date) > customer_dates.date)
-          and support_tickets.ticket_category = 'feature request'
-        then 1 else 0 
-      end) as open_feature_request_tickets
+      end) as open_{{ category | replace(' ', '_') }}_tickets
+    {% endfor %}
     -- Tickets open for 14+ days
     , sum(case 
         when date(support_tickets.created_date) <= customer_dates.date 
@@ -180,65 +167,43 @@ with customers as (
     , coalesce(daily_subscription_metrics.total_arr, 0) as total_arr
     , coalesce(daily_subscription_metrics.total_mrr, 0) as total_mrr
     -- Subscription percentage changes
+    {% for metric in ['products', 'arr', 'mrr'] %}
     , case 
-        when coalesce(daily_subscription_metrics.num_products_90d_ago, 0) = 0 then null
+        when coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0) = 0 then null
         else round(
-            (coalesce(daily_subscription_metrics.num_products, 0) - coalesce(daily_subscription_metrics.num_products_90d_ago, 0)) * 100.0 
-            / coalesce(daily_subscription_metrics.num_products_90d_ago, 0)
+            (coalesce(daily_subscription_metrics.{{ metric }}, 0) - coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0)) * 100.0 
+            / coalesce(daily_subscription_metrics.{{ metric }}_90d_ago, 0)
           , 2)
-      end as pct_change_products_90d
-    , case 
-        when coalesce(daily_subscription_metrics.total_arr_90d_ago, 0) = 0 then null
-        else round(
-            (coalesce(daily_subscription_metrics.total_arr, 0) - coalesce(daily_subscription_metrics.total_arr_90d_ago, 0)) * 100.0 
-            / coalesce(daily_subscription_metrics.total_arr_90d_ago, 0)
-          , 2)
-      end as pct_change_arr_90d
-    , case 
-        when coalesce(daily_subscription_metrics.total_mrr_90d_ago, 0) = 0 then null
-        else round(
-            (coalesce(daily_subscription_metrics.total_mrr, 0) - coalesce(daily_subscription_metrics.total_mrr_90d_ago, 0)) * 100.0 
-            / coalesce(daily_subscription_metrics.total_mrr_90d_ago, 0)
-          , 2)
-      end as pct_change_mrr_90d
+      end as pct_change_{{ metric }}_90d
+    {% endfor %}
 
     -- Login metrics
     , coalesce(daily_login_metrics.num_logins, 0) as num_logins
     , coalesce(daily_login_metrics.num_unique_users, 0) as num_unique_users
-    , coalesce(daily_login_metrics.admin_logins, 0) as admin_logins
-    , coalesce(daily_login_metrics.advanced_logins, 0) as advanced_logins
-    , coalesce(daily_login_metrics.standard_logins, 0) as standard_logins
-    , coalesce(daily_login_metrics.admin_unique_users, 0) as admin_unique_users
-    , coalesce(daily_login_metrics.advanced_unique_users, 0) as advanced_unique_users
-    , coalesce(daily_login_metrics.standard_unique_users, 0) as standard_unique_users
+    {% for user_type in user_types %}
+    , coalesce(daily_login_metrics.{{ user_type }}_logins, 0) as {{ user_type }}_logins
+    , coalesce(daily_login_metrics.{{ user_type }}_unique_users, 0) as {{ user_type }}_unique_users
+    {% endfor %}
 
     -- Login trend metrics
-    , coalesce(daily_login_metrics.num_logins_last_3m, 0) as num_logins_last_3m
-    , coalesce(daily_login_metrics.num_unique_users_last_3m, 0) as num_unique_users_last_3m
-    , coalesce(daily_login_metrics.num_logins_prev_3m, 0) as num_logins_prev_3m
-    , coalesce(daily_login_metrics.num_unique_users_prev_3m, 0) as num_unique_users_prev_3m
+    {% for metric in ['num_logins', 'num_unique_users'] %}
+    , coalesce(daily_login_metrics.{{ metric }}_last_3m, 0) as {{ metric }}_last_3m
+    , coalesce(daily_login_metrics.{{ metric }}_prev_3m, 0) as {{ metric }}_prev_3m
     , case 
-        when coalesce(daily_login_metrics.num_logins_prev_3m, 0) = 0 then null
+        when coalesce(daily_login_metrics.{{ metric }}_prev_3m, 0) = 0 then null
         else round(
-            (coalesce(daily_login_metrics.num_logins_last_3m, 0) - coalesce(daily_login_metrics.num_logins_prev_3m, 0)) * 100.0 
-            / coalesce(daily_login_metrics.num_logins_prev_3m, 0)
+            (coalesce(daily_login_metrics.{{ metric }}_last_3m, 0) - coalesce(daily_login_metrics.{{ metric }}_prev_3m, 0)) * 100.0 
+            / coalesce(daily_login_metrics.{{ metric }}_prev_3m, 0)
           , 2)
-      end as pct_change_logins_3m
-    , case 
-        when coalesce(daily_login_metrics.num_unique_users_prev_3m, 0) = 0 then null
-        else round(
-            (coalesce(daily_login_metrics.num_unique_users_last_3m, 0) - coalesce(daily_login_metrics.num_unique_users_prev_3m, 0)) * 100.0 
-            / coalesce(daily_login_metrics.num_unique_users_prev_3m, 0)
-          , 2)
-      end as pct_change_unique_users_3m
+      end as pct_change_{{ metric | replace('num_', '') }}_3m
+    {% endfor %}
 
     -- Ticket metrics
     , coalesce(daily_ticket_metrics.total_tickets_to_date, 0) as total_tickets_to_date
     , coalesce(daily_ticket_metrics.open_tickets, 0) as open_tickets
-    , coalesce(daily_ticket_metrics.open_bug_tickets, 0) as open_bug_tickets
-    , coalesce(daily_ticket_metrics.open_incident_tickets, 0) as open_incident_tickets
-    , coalesce(daily_ticket_metrics.open_question_tickets, 0) as open_question_tickets
-    , coalesce(daily_ticket_metrics.open_feature_request_tickets, 0) as open_feature_request_tickets
+    {% for category in ticket_categories %}
+    , coalesce(daily_ticket_metrics.open_{{ category | replace(' ', '_') }}_tickets, 0) as open_{{ category | replace(' ', '_') }}_tickets
+    {% endfor %}
     , coalesce(daily_ticket_metrics.tickets_open_14plus_days, 0) as tickets_open_14plus_days
     , round(coalesce(daily_ticket_metrics.avg_days_to_resolution, 0), 1) as avg_days_to_resolution
 
@@ -280,10 +245,10 @@ with customers as (
 )
 
 , final as (
-    select 
-      *
-      -- Normalize risk score across customers for each date (0-100 scale)
-      , round(
+  select 
+    *
+    -- Normalize risk score across customers for each date (0-100 scale)
+    , round(
         case 
           when max(customer_risk_score_raw) over (partition by date) = min(customer_risk_score_raw) over (partition by date) then 50
           else 100.0 * (customer_risk_score_raw - min(customer_risk_score_raw) over (partition by date)) 
@@ -291,7 +256,7 @@ with customers as (
         end
       , 2) as customer_risk_score
 
-    from indicators
+  from indicators
 )
 
 select * from final
