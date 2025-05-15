@@ -272,7 +272,12 @@ with customers as (
 
 , final as (
   select 
-    customer_id
+    {{ dbt_utils.generate_surrogate_key(
+      ['customer_id'
+      , 'date']
+      ) 
+    }} as record_key
+    , customer_id
     , date
     , num_products
     , total_arr
