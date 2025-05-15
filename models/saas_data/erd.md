@@ -1,10 +1,10 @@
 ```mermaid
 erDiagram
-    customers ||--o{ subscriptions : "has"
-    customers ||--o{ login_events : "has"
-    customers ||--o{ support_tickets : "has"
-    customers ||--o{ customer_daily_metrics : "has"
-    customer_daily_metrics ||--o{ customers_enriched : "latest"
+    customers ||--o{ subscriptions : "customer_id"
+    customers ||--o{ login_events : "customer_id"
+    customers ||--o{ support_tickets : "customer_id"
+    customers ||--o{ customer_daily_metrics : "customer_id"
+    customer_daily_metrics ||--o{ customers_enriched : "customer_id"
 
     customers {
         string customer_id PK
@@ -14,7 +14,7 @@ erDiagram
     }
 
     subscriptions {
-        string customer_id FK
+        string customer_id FK "references customers.customer_id"
         string product_id
         int quantity
         date start_date
@@ -24,14 +24,14 @@ erDiagram
 
     login_events {
         string user_id
-        string customer_id FK
+        string customer_id FK "references customers.customer_id"
         string user_type
         timestamp login_timestamp
     }
 
     support_tickets {
         string ticket_id PK
-        string customer_id FK
+        string customer_id FK "references customers.customer_id"
         string status
         timestamp created_date
         string ticket_category
@@ -40,7 +40,7 @@ erDiagram
 
     customer_daily_metrics {
         string record_key PK
-        string customer_id FK
+        string customer_id FK "references customers.customer_id"
         date date
         int num_products
         numeric total_arr
@@ -78,7 +78,7 @@ erDiagram
     }
 
     customers_enriched {
-        string customer_id PK,FK
+        string customer_id PK,FK "references customers.customer_id"
         date acquisition_date
         string region
         string industry
@@ -130,21 +130,21 @@ This diagram shows the relationships between all models in the saas_data directo
    - Contains basic customer attributes (acquisition date, region, industry)
 
 2. **subscriptions**: Customer subscription data
-   - Foreign key: `customer_id` references customers
+   - Foreign key: `customer_id` references customers.customer_id
    - Contains product assignments, quantities, and revenue information
 
 3. **login_events**: User login activity
-   - Foreign key: `customer_id` references customers
+   - Foreign key: `customer_id` references customers.customer_id
    - Contains user type and login timestamp information
 
 4. **support_tickets**: Customer support tickets
    - Primary key: `ticket_id`
-   - Foreign key: `customer_id` references customers
+   - Foreign key: `customer_id` references customers.customer_id
    - Contains ticket status, category, and timing information
 
 5. **customer_daily_metrics**: Daily metrics for each customer
    - Primary key: `record_key` (surrogate key)
-   - Foreign key: `customer_id` references customers
+   - Foreign key: `customer_id` references customers.customer_id
    - Contains comprehensive daily metrics including:
      - Subscription metrics (products, ARR, MRR)
      - Login metrics (by user type)
@@ -153,14 +153,22 @@ This diagram shows the relationships between all models in the saas_data directo
 
 6. **customers_enriched**: Latest metrics for each customer
    - Primary key: `customer_id`
-   - Foreign key: `customer_id` references customers
+   - Foreign key: `customer_id` references customers.customer_id
    - Contains the most recent metrics from customer_daily_metrics plus:
      - Days since acquisition
      - Days since last activity
 
 ## Key Relationships:
-- One customer can have many subscriptions
-- One customer can have many login events
-- One customer can have many support tickets
-- One customer can have many daily metrics
-- One customer has one enriched record (latest metrics) 
+- One customer can have many subscriptions (joined on customer_id)
+- One customer can have many login events (joined on customer_id)
+- One customer can have many support tickets (joined on customer_id)
+- One customer can have many daily metrics (joined on customer_id)
+- One customer has one enriched record (joined on customer_id)
+
+## Join Relationships:
+All tables join to the customers table using the customer_id field:
+- subscriptions.customer_id → customers.customer_id
+- login_events.customer_id → customers.customer_id
+- support_tickets.customer_id → customers.customer_id
+- customer_daily_metrics.customer_id → customers.customer_id
+- customers_enriched.customer_id → customers.customer_id 
