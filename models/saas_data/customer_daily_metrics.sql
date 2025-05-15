@@ -263,7 +263,7 @@ with customers as (
         -- Ratio of critical tickets (bugs, incidents, long-running) to total open tickets
         case 
           when open_tickets = 0 then 0
-          else ((open_bug_tickets + open_incident_tickets + tickets_open_14plus_days) * 100.0 / open_tickets)
+          else ((open_bug_tickets + open_incident_tickets + tickets_open_14plus_days) / open_tickets)
         end
       , 2) as customer_risk_score_raw
   
