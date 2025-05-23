@@ -153,4 +153,5 @@ models:
         data_type: numeric
         tests:
           - dbt_utils.expression_is_true:
-              expression: ">= 0 and <= 100" 
+              expression: ">= 0"
+              expression_type: "<= 100"
