@@ -38,3 +38,15 @@ The model:
 - Aggregates metrics across all restaurants in each cuisine
 - Maintains the same metric structure as the restaurant model
 - Provides cuisine-specific performance insights 
+
+## SCD2 Data for Cuisines
+
+Given a slowly changing dimension of the cuisines for each restaurant,  I would take one of the following approaches, depending on how the data was ingested / sourced:
+
+- If possible, take a daily snapshot of the cuisine values for each restuarant
+- If the data is ingested using CDC, with a table with valid from / valid to timestamps, transform that into a daily grain table by restaurant by joining with a date dimension
+- If changes in cuisines are emitted as events, transform into the valid from / valid to table descirbed above, and then into a daily grain table
+
+The end result for any of the cases above is to have a daily grain table by restaurant that could be part of a larger restuarant dimension with daily values that could be joined to any other table with history for accurate, historical reporting.
+
+My assumption is that the metrics tables built above would ultimately by aggregated by resturant by day, as well, and so these metrics and time-based dimensioned could be easily joined.
