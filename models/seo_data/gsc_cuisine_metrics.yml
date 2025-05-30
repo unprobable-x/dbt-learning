@@ -1,0 +1,154 @@
+version: 2
+
+models:
+  - name: gsc_cuisine_metrics
+    description: "Aggregated Google Search Console metrics at the cuisine level, broken down by branded and unbranded searches"
+    
+    columns:
+      - name: cuisine
+        description: "The cuisine type"
+        tests:
+          - not_null
+          - unique
+
+      - name: restaurant_count
+        description: "Number of restaurants in this cuisine category"
+
+      # Overall metrics
+      - name: overall_unique_terms
+        description: "Total number of unique search terms across all restaurants in this cuisine"
+
+      - name: overall_clicks
+        description: "Total number of clicks from all search terms across all restaurants in this cuisine"
+
+      - name: overall_impressions
+        description: "Total number of impressions from all search terms across all restaurants in this cuisine"
+
+      - name: overall_avg_ctr
+        description: "Average click-through rate across all search terms for this cuisine"
+
+      - name: overall_avg_position
+        description: "Average position across all search terms for this cuisine"
+
+      - name: overall_median_ctr
+        description: "Median click-through rate across all search terms for this cuisine"
+
+      - name: overall_median_position
+        description: "Median position across all search terms for this cuisine"
+
+      - name: overall_clicks_top_3
+        description: "Total clicks from terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: overall_clicks_top_10
+        description: "Total clicks from terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: overall_clicks_top_20
+        description: "Total clicks from terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      - name: overall_terms_top_3
+        description: "Number of terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: overall_terms_top_10
+        description: "Number of terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: overall_terms_top_20
+        description: "Number of terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      # Branded metrics
+      - name: branded_unique_terms
+        description: "Number of unique branded search terms across all restaurants in this cuisine"
+
+      - name: branded_clicks
+        description: "Total clicks from branded search terms across all restaurants in this cuisine"
+
+      - name: branded_impressions
+        description: "Total impressions from branded search terms across all restaurants in this cuisine"
+
+      - name: branded_avg_ctr
+        description: "Average click-through rate for branded terms in this cuisine"
+
+      - name: branded_avg_position
+        description: "Average position for branded terms in this cuisine"
+
+      - name: branded_median_ctr
+        description: "Median click-through rate for branded terms in this cuisine"
+
+      - name: branded_median_position
+        description: "Median position for branded terms in this cuisine"
+
+      - name: branded_clicks_top_3
+        description: "Total clicks from branded terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: branded_clicks_top_10
+        description: "Total clicks from branded terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: branded_clicks_top_20
+        description: "Total clicks from branded terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      - name: branded_terms_top_3
+        description: "Number of branded terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: branded_terms_top_10
+        description: "Number of branded terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: branded_terms_top_20
+        description: "Number of branded terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      # Unbranded metrics
+      - name: unbranded_unique_terms
+        description: "Number of unique unbranded search terms across all restaurants in this cuisine"
+
+      - name: unbranded_clicks
+        description: "Total clicks from unbranded search terms across all restaurants in this cuisine"
+
+      - name: unbranded_impressions
+        description: "Total impressions from unbranded search terms across all restaurants in this cuisine"
+
+      - name: unbranded_avg_ctr
+        description: "Average click-through rate for unbranded terms in this cuisine"
+
+      - name: unbranded_avg_position
+        description: "Average position for unbranded terms in this cuisine"
+
+      - name: unbranded_median_ctr
+        description: "Median click-through rate for unbranded terms in this cuisine"
+
+      - name: unbranded_median_position
+        description: "Median position for unbranded terms in this cuisine"
+
+      - name: unbranded_clicks_top_3
+        description: "Total clicks from unbranded terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: unbranded_clicks_top_10
+        description: "Total clicks from unbranded terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: unbranded_clicks_top_20
+        description: "Total clicks from unbranded terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      - name: unbranded_terms_top_3
+        description: "Number of unbranded terms ranking in top 3 positions across all restaurants in this cuisine"
+
+      - name: unbranded_terms_top_10
+        description: "Number of unbranded terms ranking in top 10 positions across all restaurants in this cuisine"
+
+      - name: unbranded_terms_top_20
+        description: "Number of unbranded terms ranking in top 20 positions across all restaurants in this cuisine"
+
+      # Calculated metrics
+      - name: branded_clicks_pct
+        description: "Percentage of total clicks from branded terms for this cuisine"
+
+      - name: unbranded_clicks_pct
+        description: "Percentage of total clicks from unbranded terms for this cuisine"
+
+      - name: branded_impressions_pct
+        description: "Percentage of total impressions from branded terms for this cuisine"
+
+      - name: unbranded_impressions_pct
+        description: "Percentage of total impressions from unbranded terms for this cuisine"
+
+      - name: branded_search_terms_pct
+        description: "Percentage of total unique search terms that are branded for this cuisine"
+
+      - name: unbranded_search_terms_pct
+        description: "Percentage of total unique search terms that are unbranded for this cuisine" 

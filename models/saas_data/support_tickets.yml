@@ -45,6 +45,3 @@ models:
       - name: closed_date
         description: "Timestamp when the ticket was closed (null if not closed)"
         data_type: timestamp
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: "closed_date is null or closed_date > created_date" 

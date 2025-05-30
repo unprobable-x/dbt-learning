@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_hex_brand_cuisine_export
+    description: "Staging model for restaurant cuisine data"
+    columns:
+      - name: restaurant_id
+        description: "Unique identifier for the restaurant"
+        tests:
+          - not_null
+          - unique
+
+      - name: cuisines
+        description: "List of cuisines associated with the restaurant"

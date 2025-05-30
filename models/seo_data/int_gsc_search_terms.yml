@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: int_gsc_search_terms
+    description: "Parsed Google Search Console data showing search terms and their performance metrics"
+    
+    columns:
+      - name: restaurant_id
+        description: "Unique identifier for the restaurant"
+        tests:
+          - not_null
+
+      - name: domain
+        description: "The domain associated with the GSC data"
+
+      - name: updated_at
+        description: "Timestamp when the record was last updated"
+
+      - name: created_at
+        description: "Timestamp when the record was created"
+
+      - name: status
+        description: "Status of the GSC data"
+
+      - name: search_term
+        description: "The search query term that led to impressions"
+
+      - name: clicks
+        description: "Number of clicks from search results"
+
+      - name: impressions
+        description: "Number of times the URL appeared in search results"
+
+      - name: ctr_percentage
+        description: "Click-through rate as a percentage (clicks/impressions * 100)"
+
+      - name: avg_position
+        description: "Average position in search results"
+  
+      - name: has_clicks
+        description: "Boolean indicating if the search term received any clicks"
+
+      - name: position_bucket
+        description: "Categorized position range (Top 3, Top 10, Top 20, Below 20)"

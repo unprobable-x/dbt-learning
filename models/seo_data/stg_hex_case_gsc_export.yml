@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_hex_case_gsc_export
+    description: "Staging model for Google Search Console export data"
+    columns:
+      - name: restaurant_id
+        description: "Unique identifier for the restaurant"
+        tests:
+          - not_null
+
+      - name: domain
+        description: "The domain associated with the GSC data"
+
+      - name: updated_at
+        description: "Timestamp when the record was last updated"
+
+      - name: created_at
+        description: "Timestamp when the record was created"
+
+      - name: status
+        description: "Status of the GSC data"
+
+      - name: data
+        description: "JSON data containing GSC metrics and dimensions"
