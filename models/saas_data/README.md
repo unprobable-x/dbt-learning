@@ -18,6 +18,20 @@ The `customer_daily_metrics` model is built at a customer-date grain for several
    - Supports both point-in-time and period-over-period comparisons
    - Can serve as the foundation for any new lookback or windowed metrics
 
+## Testing Strategy for Customer Daily Metrics
+
+The following tests are configured in the YML file for Customer Daily Metrics:
+
+   - Standard unique and not null tests for the primary key
+   - Upstream tables have tests for accepted values
+   - The risk score has a test to ensure the value is between 0 and 100
+
+Future State:
+
+   - Dashboard that shows the distribution of a sample of key metrics (num_logins, total_arr, etc.) over time and overall table stats like number of customers per day
+   - This will allow for monitoring of overall values for acceptable ranges
+   - Once the acceptable ranges are understood, automated anomaly detection can be built in
+
 ## Risk Score Calculation
 
 The raw customer risk score is calculated using a combination of metrics that indicate potential customer health issues, all with an absolute value between 0 and 1. Percent change values are multiplied by -1 to give higher scores for declining metrics.
