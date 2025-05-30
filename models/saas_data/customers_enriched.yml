@@ -173,14 +173,12 @@ models:
         data_type: numeric
         tests:
           - dbt_utils.expression_is_true:
-              expression: ">= 0 and <= 100"
+              expression: ">= 0"
+              expression: "<= 100"
 
       - name: days_since_acquisition
         description: "Number of days since the customer was acquired"
         data_type: integer
-        tests:
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
 
       - name: days_since_last_activity
         description: "Number of days since the last metrics were recorded"

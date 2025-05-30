@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: pc_fivetran_db
+    database: pc_fivetran_db
+    schema: data_outputs
+    tables:
+      - name: hex_case_gsc_export
+      - name: hex_brand_cuisine_export
