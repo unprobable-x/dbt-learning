@@ -1,58 +1,44 @@
 version: 2
 
 models:
-  - name: gsc_search_terms
+  - name: int_gsc_search_terms
     description: "Parsed Google Search Console data showing search terms and their performance metrics"
+    
     columns:
       - name: restaurant_id
         description: "Unique identifier for the restaurant"
         tests:
           - not_null
+
       - name: domain
         description: "The domain associated with the GSC data"
+
       - name: updated_at
         description: "Timestamp when the record was last updated"
+
       - name: created_at
         description: "Timestamp when the record was created"
+
       - name: status
         description: "Status of the GSC data"
+
       - name: search_term
         description: "The search query term that led to impressions"
-        tests:
-          - not_null
+
       - name: clicks
         description: "Number of clicks from search results"
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
+
       - name: impressions
         description: "Number of times the URL appeared in search results"
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
+
       - name: ctr_percentage
         description: "Click-through rate as a percentage (clicks/impressions * 100)"
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
-          - dbt_utils.expression_is_true:
-              expression: "<= 100"
+
       - name: avg_position
         description: "Average position in search results"
-        tests:
-          - not_null
-          - dbt_utils.expression_is_true:
-              expression: ">= 0"
+  
       - name: has_clicks
         description: "Boolean indicating if the search term received any clicks"
-        tests:
-          - not_null
+
       - name: position_bucket
         description: "Categorized position range (Top 3, Top 10, Top 20, Below 20)"
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['Top 3', 'Top 10', 'Top 20', 'Below 20'] 

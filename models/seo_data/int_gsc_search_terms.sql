@@ -58,10 +58,10 @@ with source as (
         end as position_bucket
         -- Branded vs Unbranded classification
         , case
-            when similarity(lower(search_term), lower(regexp_replace(domain, '^www\.|\.com$', ''))) > 0.7 then 'Branded'
+            when jarowinkler_similarity(lower(search_term), lower(regexp_replace(domain, '^www\.|\.com$', ''))) > 70 then 'Branded'
             else 'Unbranded'
         end as search_type
-        , round(similarity(lower(search_term), lower(regexp_replace(domain, '^www\.|\.com$', ''))), 2) as brand_similarity_score
+        , round(jarowinkler_similarity(lower(search_term), lower(regexp_replace(domain, '^www\.|\.com$', ''))), 2) as brand_similarity_score
     from unnested_rows
 )
 
